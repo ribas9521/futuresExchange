@@ -1,0 +1,19 @@
+//FETCHMARKETS : RESPOSTAS MATÊM UM PADRÃO ENTRE EXCHANGES.
+//O ATRIBUTO "info" contém a resposta original da exchange para esse endpoint
+//Se a exchange não enviar determinado atributo ele nao vem na resposta
+{
+  "id": "BTCUSDT",
+  "symbol": "BTC/USDT",
+  "base": "BTC",
+  "quote": "USDT",
+  "baseId": "BTC",
+  "quoteId": "USDT",
+  "info": {
+  },
+  "type": "future",
+  "spot": false,
+  "future": true,
+  "active": true,
+  "precision": {},
+  "limits": {}
+}

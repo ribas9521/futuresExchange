@@ -1,0 +1,23 @@
+version: "2.1"
+
+services:
+  web:
+    build: src/.
+    environment:
+      - PORT=3000
+      - HOST=localhost:3000
+    ports:
+      - "3000:3000" #web service port
+      - "9229:9229" #debug port
+    volumes:
+      - ./:/prototype
+    networks:
+      - prototype-network
+    working_dir: /prototype
+    command: sh -c "npm install && cd src && nodemon --inspect=0.0.0.0 ./app.js"
+    container_name: prototype
+
+networks:
+  prototype-network:
+    driver: bridge
+#--inspect=0.0.0.0

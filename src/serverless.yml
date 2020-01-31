@@ -1,0 +1,30 @@
+org: ribas95
+service: express-serverless-app
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  stage: v1
+  region: us-east-1
+  timeout: 30
+  memorySize: 512
+  package:
+    excludeDevDependencies: true
+    exclude:
+      - .git/**
+      - .vscode/**
+
+functions:
+app: futures-exchange
+events:
+      - http:
+          path: /
+          method: ANY
+          cors: true
+      - http:
+          path: /{proxy+}
+          method: ANY
+          cors: true
+
+plugins:
+  - serverless-offline      

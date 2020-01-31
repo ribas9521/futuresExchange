@@ -1,0 +1,26 @@
+const express = require("express");
+const cors = require("cors");
+const helmet = require("helmet");
+
+const { router } = require("./api/");
+const app = express();
+const bodyParser = require("body-parser");
+//comentar para serverless
+app.set("port", process.env.PORT || 3000);
+app.use(cors());
+app.use(helmet());
+app.use(bodyParser.json());
+
+app.use("/api", router);
+
+// Configura diretórios de logs
+// if (!fs.existsSync("logs"))
+// fs.mkdirSync("logs");
+
+
+//comentar para serverless
+app.listen(app.get("port"), () => {
+  console.log("Node app is running on port", app.get("port"));
+});
+
+module.exports = app;
