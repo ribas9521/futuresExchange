@@ -1,12 +1,7 @@
 const ccxt = require("ccxt");
 const { errorHandler } = require("../../../services/errorHandler");
-const { getTicker, fetchBidsAsks } = require("../../../services/general");
-const { getMarkPrice } = require("../helper");
-const {
-  instrumentInfoParser,
-  priceInfoParser,
-  feeInfoParser
-} = require("../parser");
+const InstrumentService = require("./service");
+
 const binance = new ccxt.binance({
   apiKey: "37b227b170f61da6696ee83ef81d5225869d2ea16aff1980d546ffafce89a6c7",
   secret: "1fa5a3c4e279c8b179495b606775913b9eafea536f96d3ee3ddc924e5e943d19",
@@ -23,11 +18,15 @@ const binance = new ccxt.binance({
 
 exports.getInstrumentInfo = async (req, res) => {
   try {
-    let { instrumentName } = req.query;
+    const { instrumentName } = req.query;
     const { exchangeMarkets } = req;
-    instrumentName = instrumentName.toUpperCase();
-    const parsedTicker = instrumentInfoParser(exchangeMarkets[instrumentName]);
-    const resp = { ...parsedTicker, ...{ maxLeverage: 125 } };
+    const instrumentService = new InstrumentService({
+      exchange: binance,
+      exchangeMarkets
+    });
+    const resp = instrumentService.getInstrumentInfo(
+      instrumentName.toUpperCase()
+    );
     return res.status(200).json(resp);
   } catch (e) {
     const error = errorHandler(e);
@@ -37,11 +36,12 @@ exports.getInstrumentInfo = async (req, res) => {
 
 exports.getInstruments = async (req, res) => {
   try {
-    let { exchangeMarkets } = req;
-    const allInstruments = [];
-    for (let instrument in exchangeMarkets) {
-      allInstruments.push(instrument);
-    }
+    const { exchangeMarkets } = req;
+    const instrumentService = new InstrumentService({
+      exchange: binance,
+      exchangeMarkets
+    });
+    const allInstruments = instrumentService.getInstruments();
     return res.status(200).json(allInstruments);
   } catch (e) {
     const error = errorHandler(e);
@@ -50,13 +50,13 @@ exports.getInstruments = async (req, res) => {
 };
 
 exports.getPriceInfo = async (req, res) => {
-  let { instrumentName } = req.query;
-  const { instrument } = req;
+  const { instrument, exchangeMarkets } = req;
   try {
-    const ticker = await getTicker(binance, instrumentName.toUpperCase());
-    const bidsAsks = await fetchBidsAsks(binance, instrumentName.toUpperCase());
-    const markPrice = await getMarkPrice(binance, instrument.symbol);
-    const priceInfo = priceInfoParser(instrument, ticker, bidsAsks, markPrice);
+    const instrumentService = new InstrumentService({
+      exchange: binance,
+      exchangeMarkets
+    });
+    const priceInfo = await instrumentService.getPriceInfo(instrument);
     return res.status(200).json(priceInfo);
   } catch (e) {
     const error = errorHandler(e);
@@ -65,7 +65,7 @@ exports.getPriceInfo = async (req, res) => {
 };
 
 exports.getFeeInfo = async (req, res) => {
-  const { instrument } = req;
-  const feeInfo = feeInfoParser(instrument);
+  const instrumentService = new InstrumentService({});
+  const feeInfo = instrumentService.getFeeInfo();
   return res.status(200).json(feeInfo);
 };
