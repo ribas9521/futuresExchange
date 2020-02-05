@@ -4,8 +4,10 @@ const {
   getPrecision,
   filterQuantity,
   filterPrice,
-  filterSide,
-  filterType
+  filterSideTo,
+  filterSidefrom,
+  filterType,
+  getRelativeValuesAndPrecisionByExchange
 } = require("../../services/general");
 exports.instrumentInfoParser = instrumentTicker => {
   const { info } = instrumentTicker;
@@ -67,7 +69,7 @@ exports.feeInfoParser = instrument => {
   return feeInfo;
 };
 
-exports.orderParser = (orderInfo, exchangeMarkets) => {
+exports.createOrderParser = (orderInfo, exchangeMarkets) => {
   let {
     instrumentName,
     customId,
@@ -92,7 +94,7 @@ exports.orderParser = (orderInfo, exchangeMarkets) => {
     price = parseFloat(price / getPrecision(pricePrecision));
     orderInfo.price = filterPrice(price, pricePrecision);
   }
-  side = filterSide(side);
+  side = filterSideTo(side);
   orderInfo.side = side;
   type = filterType(type);
   orderInfo.type = type;
@@ -104,4 +106,54 @@ exports.orderParser = (orderInfo, exchangeMarkets) => {
   orderInfo.timeInForce = "GTC";
   orderInfo.type === "MARKET" && delete orderInfo.timeInForce;
   return orderInfo;
+};
+
+exports.getOrderParser = async (order, exchangeMarkets) => {
+  let {
+    id,
+    info,
+    symbol,
+    amount,
+    price,
+    remaining,
+    side,
+    status,
+    timeStamp
+  } = order;
+  const { clientOrderId, type } = info;
+  const sizeAndPrecision = getRelativeValuesAndPrecisionByExchange(
+    amount,
+    "size",
+    symbol,
+    exchangeMarkets
+  );
+  priceAndPrecision = getRelativeValuesAndPrecisionByExchange(
+    price,
+    "price",
+    symbol,
+    exchangeMarkets
+  );
+  const relativeRemaining = getRelativeValuesAndPrecisionByExchange(
+    remaining,
+    "size",
+    symbol,
+    exchangeMarkets
+  );
+  const newOrder = {
+    id,
+    customId: clientOrderId,
+    instrumentName: symbol,
+    size: sizeAndPrecision.relativeValue,
+    sizePrecision: sizeAndPrecision.relativePrecision,
+    price: priceAndPrecision.relativeValue,
+    pricePrecision: priceAndPrecision.relativePrecision,
+    leftSize: relativeRemaining.relativeValue,
+    side: filterSidefrom(side),
+    status,
+    type,
+    timeStamp,
+    description: "",
+    open: status === "closed" ? false : true
+  };
+  return newOrder;
 };

@@ -91,10 +91,19 @@ exports.filterQuantity = (quantity, precision) => {
   );
 };
 
-exports.filterSide = side => {
+exports.filterSideTo = side => {
   side = side.toUpperCase();
   if (side === "LONG") return "BUY";
   else if (side === "SHORT") return "SELL";
+  throw {
+    type: "side error ",
+    message: "invalid side"
+  };
+};
+exports.filterSidefrom = side => {
+  side = side.toUpperCase();
+  if (side === "BUY") return "LONG";
+  else if (side === "SELL") return "SHORT";
   throw {
     type: "side error ",
     message: "invalid side"
@@ -108,4 +117,27 @@ exports.filterType = type => {
     type: "type error ",
     message: "invalid type"
   };
+};
+
+/**
+ * Returns the values in form of integer and it's precision
+ */
+exports.getRelativeValuesAndPrecisionByExchange = (
+  value,
+  type,
+  instrumentName,
+  exchangeMarkets
+) => {
+  const exchangePrecision = exchangeMarkets[instrumentName].precision;
+  let relativeValue = 0;
+  let relativePrecision = 0;
+  if (type === "size") {
+    relativePrecision = this.getPrecision(exchangePrecision.amount);
+    relativeValue = value * relativePrecision;
+    return { relativeValue, relativePrecision };
+  } else if (type === "price") {
+    relativePrecision = this.getPrecision(exchangePrecision.price);
+    relativeValue = value * relativePrecision;
+    return { relativeValue, relativePrecision };
+  }
 };
