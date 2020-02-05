@@ -18,7 +18,7 @@ exports.authenticateAndConnect = async (req, res, next) => {
         message: "Invalid AccountId",
         type: "Invalid AccountId"
       };
-    const apiPair = getApiPair(exchangename, accountid);
+    const apiPair = await getApiPair(exchangename, accountid);
     if (apiPair) {
       const { apiKey, secret } = apiPair;
       exchangeOptions = {

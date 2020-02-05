@@ -1,7 +1,11 @@
 const {
   countDecimals,
   parseToInt,
-  getPrecision
+  getPrecision,
+  filterQuantity,
+  filterPrice,
+  filterSide,
+  filterType
 } = require("../../services/general");
 exports.instrumentInfoParser = instrumentTicker => {
   const { info } = instrumentTicker;
@@ -61,4 +65,43 @@ exports.feeInfoParser = instrument => {
     feePrecision: 1000
   };
   return feeInfo;
+};
+
+exports.orderParser = (orderInfo, exchangeMarkets) => {
+  let {
+    instrumentName,
+    customId,
+    size,
+    price,
+    side,
+    type,
+    stopPrice
+  } = orderInfo;
+  const symbol = exchangeMarkets[instrumentName].id;
+  delete orderInfo.instrumentName;
+  orderInfo.symbol = symbol;
+  orderInfo.newClientOrderId = customId;
+  delete orderInfo.customId;
+  const sizePrecision = exchangeMarkets[instrumentName].precision.amount;
+  size = parseFloat(size / getPrecision(sizePrecision));
+  orderInfo.quantity = filterQuantity(size, sizePrecision);
+  delete orderInfo.size;
+  let pricePrecision;
+  if (price) {
+    pricePrecision = exchangeMarkets[instrumentName].precision.price;
+    price = parseFloat(price / getPrecision(pricePrecision));
+    orderInfo.price = filterPrice(price, pricePrecision);
+  }
+  side = filterSide(side);
+  orderInfo.side = side;
+  type = filterType(type);
+  orderInfo.type = type;
+  if (price && type === "TAKE_PROFIT") {
+    orderInfo.stopPrice = filterPrice(
+      parseFloat(price / getPrecision(pricePrecision), pricePrecision)
+    );
+  }
+  orderInfo.timeInForce = "GTC";
+  orderInfo.type === "MARKET" && delete orderInfo.timeInForce;
+  return orderInfo;
 };

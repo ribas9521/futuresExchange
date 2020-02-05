@@ -1,4 +1,11 @@
 const ccxt = require("ccxt");
+const {
+  numberToString,
+  decimalToPrecision,
+  TRUNCATE,
+  DECIMAL_PLACES,
+  NO_PADDING
+} = require("ccxt");
 exports.getTicker = async (conn, instumentName = null) => {
   let ticker;
   if (instumentName) {
@@ -58,4 +65,47 @@ exports.parseToInt = value => {
 
 exports.getPrecision = power => {
   return Math.pow(10, power);
+};
+
+exports.filterPrice = (price, precision) => {
+  return parseFloat(
+    decimalToPrecision(
+      numberToString(price),
+      TRUNCATE,
+      precision,
+      DECIMAL_PLACES,
+      NO_PADDING
+    )
+  );
+};
+
+exports.filterQuantity = (quantity, precision) => {
+  return parseFloat(
+    decimalToPrecision(
+      numberToString(quantity),
+      TRUNCATE,
+      precision,
+      DECIMAL_PLACES,
+      NO_PADDING
+    )
+  );
+};
+
+exports.filterSide = side => {
+  side = side.toUpperCase();
+  if (side === "LONG") return "BUY";
+  else if (side === "SHORT") return "SELL";
+  throw {
+    type: "side error ",
+    message: "invalid side"
+  };
+};
+exports.filterType = type => {
+  type = type.toUpperCase();
+  if (type === "LIMIT" || type === "MARKET" || type === "TAKE_PROFIT")
+    return type;
+  throw {
+    type: "type error ",
+    message: "invalid type"
+  };
 };
