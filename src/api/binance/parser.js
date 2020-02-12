@@ -7,8 +7,17 @@ const {
   filterSideTo,
   filterSidefrom,
   filterType,
-  getRelativeValuesAndPrecisionByExchange
+  getRelativeValuesAndPrecisionByExchange,
+  getAbsoluteValueByExchange,
+  getInstrumentNameFromId,
+  round
 } = require("../../services/general");
+
+const { setOrderParams, shouldUseParams } = require("./helper");
+const { getInstrumentId } = require("../../services/general");
+
+const variables = require("./variables");
+
 exports.instrumentInfoParser = instrumentTicker => {
   const { info } = instrumentTicker;
   const { filters } = info;
@@ -69,43 +78,35 @@ exports.feeInfoParser = instrument => {
   return feeInfo;
 };
 
-exports.createOrderParser = (orderInfo, exchangeMarkets) => {
-  let {
-    instrumentName,
-    customId,
-    size,
-    price,
-    side,
-    type,
-    stopPrice
-  } = orderInfo;
-  const symbol = exchangeMarkets[instrumentName].id;
-  delete orderInfo.instrumentName;
-  orderInfo.symbol = symbol;
-  orderInfo.newClientOrderId = customId;
-  delete orderInfo.customId;
-  const sizePrecision = exchangeMarkets[instrumentName].precision.amount;
-  size = parseFloat(size / getPrecision(sizePrecision));
-  orderInfo.quantity = filterQuantity(size, sizePrecision);
-  delete orderInfo.size;
-  let pricePrecision;
-  if (price) {
-    pricePrecision = exchangeMarkets[instrumentName].precision.price;
-    price = parseFloat(price / getPrecision(pricePrecision));
-    orderInfo.price = filterPrice(price, pricePrecision);
-  }
-  side = filterSideTo(side);
-  orderInfo.side = side;
-  type = filterType(type);
-  orderInfo.type = type;
-  if (price && type === "TAKE_PROFIT") {
-    orderInfo.stopPrice = filterPrice(
-      parseFloat(price / getPrecision(pricePrecision), pricePrecision)
-    );
-  }
-  orderInfo.timeInForce = "GTC";
-  orderInfo.type === "MARKET" && delete orderInfo.timeInForce;
-  return orderInfo;
+exports.createOrderParser = (order, exchangeMarkets) => {
+  let { instrumentName, size, price, side, type, timeStamp } = order;
+
+  const params = setOrderParams(order, exchangeMarkets);
+
+  const newOrder = {
+    symbol: instrumentName,
+    side: filterSideTo(side),
+    amount: getAbsoluteValueByExchange(
+      size,
+      "size",
+      instrumentName,
+      exchangeMarkets
+    ),
+    ...(price && {
+      price: getAbsoluteValueByExchange(
+        price,
+        "price",
+        instrumentName,
+        exchangeMarkets
+      )
+    }),
+    type: filterType(type),
+    timeStamp,
+    ...(shouldUseParams(order) && {
+      params
+    })
+  };
+  return newOrder;
 };
 
 exports.getOrderParser = async (order, exchangeMarkets) => {
@@ -120,7 +121,7 @@ exports.getOrderParser = async (order, exchangeMarkets) => {
     status,
     timeStamp
   } = order;
-  const { clientOrderId, type } = info;
+  const { clientOrderId, type, stopPrice } = info;
   const sizeAndPrecision = getRelativeValuesAndPrecisionByExchange(
     amount,
     "size",
@@ -139,6 +140,13 @@ exports.getOrderParser = async (order, exchangeMarkets) => {
     symbol,
     exchangeMarkets
   );
+  if (stopPrice)
+    relativeStopPrice = getRelativeValuesAndPrecisionByExchange(
+      stopPrice,
+      "price",
+      symbol,
+      exchangeMarkets
+    );
   const newOrder = {
     id,
     customId: clientOrderId,
@@ -153,7 +161,83 @@ exports.getOrderParser = async (order, exchangeMarkets) => {
     type,
     timeStamp,
     description: "",
-    open: status === "closed" ? false : true
+    open: status === "closed" ? false : true,
+    ...(stopPrice && {
+      stopPrice: relativeStopPrice.relativeValue
+    })
   };
   return newOrder;
+};
+
+exports.getPositionParser = (positions, instrumentName, exchangeMarkets) => {
+  const position = positions.filter(p => {
+    return p.symbol === getInstrumentId(instrumentName, exchangeMarkets);
+  })[0];
+
+  let {
+    positionAmt,
+    entryPrice,
+    leverage,
+    unRealizedProfit,
+    marginType
+  } = position;
+  const sizeAndPrecision = getRelativeValuesAndPrecisionByExchange(
+    positionAmt,
+    "size",
+    instrumentName,
+    exchangeMarkets
+  );
+
+  const size = sizeAndPrecision.relativeValue;
+  const sizePrecision = sizeAndPrecision.relativePrecision;
+  const balanceUsed = (positionAmt / leverage) * entryPrice;
+  const balanceUsedAndPrecision = getRelativeValuesAndPrecisionByExchange(
+    balanceUsed,
+    "price",
+    instrumentName,
+    exchangeMarkets
+  );
+  const pnl =
+    round((unRealizedProfit / entryPrice / (positionAmt / leverage)) * 100, 3) *
+    variables.position.pnlPrecision;
+  const pnlPrecision = variables.position.pnlPrecision;
+  const relativeLeverage = leverage * variables.leverage.precision;
+  const leveragePrecision = variables.leverage.precision;
+  const leverageIsolated = marginType === "isolated" ? true : false;
+  return {
+    size,
+    sizePrecision,
+    balanceUsed: balanceUsedAndPrecision.relativeValue,
+    balanceUsedPrecision: balanceUsedAndPrecision.relativePrecision,
+    pnl,
+    pnlPrecision,
+    leverage: relativeLeverage,
+    leveragePrecision,
+    leverageIsolated
+  };
+};
+
+exports.setLeverageParser = (value, instrumentName, exchangeMarkets) => {
+  return {
+    leverage: value,
+    symbol: getInstrumentId(instrumentName, exchangeMarkets)
+  };
+};
+exports.getLeverageParser = (leverageInfo, exchangeMarkets) => {
+  const { leverage, symbol } = leverageInfo;
+  const {
+    relativeValue,
+    relativePrecision
+  } = getRelativeValuesAndPrecisionByExchange(
+    leverage,
+    null,
+    null,
+    null,
+    variables.leverage.precision
+  );
+  return {
+    value: relativeValue,
+    valuePrecision: relativePrecision,
+    instrumentName: getInstrumentNameFromId(symbol, exchangeMarkets)
+  };
 };

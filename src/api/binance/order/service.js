@@ -7,9 +7,24 @@ class OrderService {
     this.exchangeMarkets = exchangeMarkets;
   }
   async createOrder(orderInfo) {
-    const parsedOrder = createOrderParser(orderInfo, this.exchangeMarkets);
-    const order = await this.exchange.fapiPrivatePostOrder(parsedOrder);
-    return order;
+    const {
+      symbol,
+      side,
+      amount,
+      price,
+      type,
+      timeStamp,
+      params
+    } = createOrderParser(orderInfo, this.exchangeMarkets);
+    const order = await this.exchange.createOrder(
+      symbol,
+      type,
+      side,
+      amount,
+      price,
+      params
+    );
+    return getOrderParser(order, this.exchangeMarkets);
   }
   async getOrder(orderId, instrumentName) {
     const order = await this.exchange.fetchOrder(orderId, instrumentName);
@@ -23,6 +38,12 @@ class OrderService {
     );
     //const parsedOrder = getOrderParser(order, this.exchangeMarkets);
     return getOrderParser(canceledOrder, this.exchangeMarkets);
+  }
+  async updateOrder(orderInfo) {
+    const { orderId, instrumentName } = orderInfo;
+    await this.cancelOrder(orderId, instrumentName);
+    const createdOrder = await this.createOrder(orderInfo);
+    return createdOrder;
   }
 }
 

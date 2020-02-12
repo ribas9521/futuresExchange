@@ -5,3 +5,10 @@ exports.fees = {
     feePrecision: 100
   }
 };
+exports.leverage = {
+  precision: 1
+};
+
+exports.position = {
+  pnlPrecision: 1000
+};

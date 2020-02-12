@@ -52,3 +52,18 @@ exports.cancelOrder = async (req, res) => {
     return res.status(500).json(error);
   }
 };
+
+exports.updateOrder = async (req, res) => {
+  try {
+    const { exchangeMarkets, exchange, body } = req;
+    const orderService = new OrderService({
+      exchange,
+      exchangeMarkets
+    });
+    const order = await orderService.updateOrder(body);
+    return res.status(200).json(order);
+  } catch (e) {
+    const error = errorHandler(e);
+    return res.status(500).json(error);
+  }
+};

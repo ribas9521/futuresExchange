@@ -63,8 +63,9 @@ exports.parseToInt = value => {
   return parseInt(this.removeSpecialCharacters(value));
 };
 
-exports.getPrecision = power => {
-  return Math.pow(10, power);
+exports.getPrecision = (value, fromOrTo) => {
+  if ("from") return Math.pow(10, value);
+  else if ("to") return;
 };
 
 exports.filterPrice = (price, precision) => {
@@ -119,6 +120,24 @@ exports.filterType = type => {
   };
 };
 
+exports.getAbsoluteValueByExchange = (
+  value,
+  type,
+  instrumentName,
+  exchangeMarkets
+) => {
+  const exchangePrecision = exchangeMarkets[instrumentName].precision;
+  let absoluteValue = 0,
+    precision = 0;
+  if (type === "size") {
+    precision = this.getPrecision(exchangePrecision.amount);
+  } else if (type === "price") {
+    precision = this.getPrecision(exchangePrecision.price);
+  }
+  absoluteValue = value / precision;
+  return absoluteValue;
+};
+
 /**
  * Returns the values in form of integer and it's precision
  */
@@ -126,18 +145,33 @@ exports.getRelativeValuesAndPrecisionByExchange = (
   value,
   type,
   instrumentName,
-  exchangeMarkets
+  exchangeMarkets,
+  precision
 ) => {
-  const exchangePrecision = exchangeMarkets[instrumentName].precision;
+  const exchangePrecision = exchangeMarkets
+    ? exchangeMarkets[instrumentName].precision
+    : null;
   let relativeValue = 0;
   let relativePrecision = 0;
   if (type === "size") {
     relativePrecision = this.getPrecision(exchangePrecision.amount);
-    relativeValue = value * relativePrecision;
-    return { relativeValue, relativePrecision };
   } else if (type === "price") {
     relativePrecision = this.getPrecision(exchangePrecision.price);
-    relativeValue = value * relativePrecision;
-    return { relativeValue, relativePrecision };
+  } else {
+    relativePrecision = precision;
   }
+  relativeValue = value * relativePrecision;
+  return { relativeValue, relativePrecision };
+};
+
+exports.getInstrumentId = (instrumentName, exchangeMarkets) =>
+  exchangeMarkets[instrumentName].id;
+
+exports.getInstrumentNameFromId = (id, exchangeMarkets) => {
+  exchangeMarkets = Object.values(exchangeMarkets);
+  return exchangeMarkets.filter(market => market.id === id)[0].symbol;
+};
+
+exports.round = (number, places) => {
+  return +(Math.round(number + "e+" + places) + "e-" + places);
 };
