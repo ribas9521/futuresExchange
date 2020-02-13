@@ -24,12 +24,6 @@ exports.fetchBidsAsks = async (conn, instumentName = null) => {
 };
 
 exports.getOrderBook = async (conn, instrumentName) => {
-  if (!instrumentName) {
-    throw {
-      type: "invalid instrument name",
-      message: "instrument name required"
-    };
-  }
   const orderBook = await conn.fetchOrderBook(instrumentName);
   return orderBook;
 };

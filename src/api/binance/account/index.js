@@ -1,8 +1,7 @@
 const { Router } = require("express");
-const { isInstrumentValid } = require("../../middleware");
 
 const router = new Router();
-const { getPosition } = require("./controller");
-router.get("/", isInstrumentValid, getPosition);
+const { getBalance } = require("./controller");
+router.get("/balance", getBalance);
 
 exports.router = router;

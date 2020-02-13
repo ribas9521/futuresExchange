@@ -1,17 +1,16 @@
 const { errorHandler } = require("../../../services/errorHandler");
-const PositionService = require("./service");
+const AccountService = require("./service");
 
-exports.getPosition = async (req, res) => {
+exports.getBalance = async (req, res) => {
   try {
-    const { exchangeMarkets, exchange, query } = req;
-    const { instrumentName } = query;
+    const { exchangeMarkets, exchange } = req;
 
-    const positionService = new PositionService({
+    const accountService = new AccountService({
       exchange,
       exchangeMarkets
     });
-    const position = await positionService.getPosition(instrumentName);
-    return res.status(200).json(position);
+    const balance = await accountService.getBalance();
+    return res.status(200).json(balance);
   } catch (e) {
     const error = errorHandler(e);
     return res.status(500).json(error);

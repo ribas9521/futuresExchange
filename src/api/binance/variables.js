@@ -12,3 +12,10 @@ exports.leverage = {
 exports.position = {
   pnlPrecision: 1000
 };
+
+exports.balance = {
+  precision: 100000000
+};
+exports.funding = {
+  precision: 100000000
+};

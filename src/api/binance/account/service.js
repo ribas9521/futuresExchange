@@ -1,4 +1,5 @@
-const { getPositionParser } = require("../parser");
+const { getBalanceParser } = require("../parser");
+const { getMarkPrice } = require("../helper");
 
 class AccountService {
   constructor(dependencies) {
@@ -6,15 +7,12 @@ class AccountService {
     this.exchange = exchange;
     this.exchangeMarkets = exchangeMarkets;
   }
-  async getPosition(instrumentName) {
-    const positions = await this.exchange.fapiPrivateGetPositionRisk();
-    // const parsedPosition = getPositionParser(
-    //   positions,
-    //   instrumentName,
-    //   this.exchangeMarkets
-    // );
-    //const parsedOrder = getOrderParser(order, this.exchangeMarkets);
-    return positions;
+  async getBalance() {
+    const balance = await this.exchange.fetchBalance();
+    const markPrice = await getMarkPrice(this.exchange, "BTC/USDT");
+    const parsedBalance = getBalanceParser(balance, markPrice);
+
+    return parsedBalance;
   }
 }
 

@@ -1,4 +1,5 @@
 const { getOrderBook } = require("../../../services/general");
+const { getOrderBookParser } = require("../parser");
 
 class OrderBookService {
   constructor(dependencies) {
@@ -8,7 +9,12 @@ class OrderBookService {
   }
   async getOrderBook(instrumentName) {
     const orderBook = await getOrderBook(this.exchange, instrumentName);
-    return orderBook;
+    const parsedOrderBook = getOrderBookParser(
+      orderBook,
+      this.exchangeMarkets,
+      instrumentName
+    );
+    return parsedOrderBook;
   }
 }
 module.exports = OrderBookService;

@@ -4,6 +4,8 @@ const orderBook = require("./orderBook").router;
 const order = require("./order").router;
 const position = require("./position").router;
 const leverage = require("./leverage").router;
+const account = require("./account").router;
+const funding = require("./funding").router;
 
 const router = new Router();
 router.use("/instrument", instrument);
@@ -11,5 +13,7 @@ router.use("/orderBook", orderBook);
 router.use("/order", order);
 router.use("/position", position);
 router.use("/leverage", leverage);
+router.use("/account", account);
+router.use("/funding", funding);
 
 exports.router = router;

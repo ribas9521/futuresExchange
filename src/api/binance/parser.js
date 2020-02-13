@@ -241,3 +241,67 @@ exports.getLeverageParser = (leverageInfo, exchangeMarkets) => {
     instrumentName: getInstrumentNameFromId(symbol, exchangeMarkets)
   };
 };
+
+exports.getBalanceParser = (balance, markPrice) => {
+  const { USDT } = balance;
+  const { free, total } = USDT;
+  const balancePrecision = variables.balance.precision;
+  const btcTotal = parseInt(round(total / markPrice, 8) * balancePrecision);
+  const btcAvailable = round(free / markPrice, 8) * balancePrecision;
+  return {
+    total: btcTotal,
+    available: btcAvailable,
+    used: btcTotal - btcAvailable,
+    precision: balancePrecision
+  };
+};
+
+exports.getOrderBookParser = (orderbook, exchangeMarkets, instrumentName) => {
+  const { bids, asks } = orderbook;
+  const valueAndPrecisionPrice = getRelativeValuesAndPrecisionByExchange(
+    bids[0][0],
+    "price",
+    instrumentName,
+    exchangeMarkets
+  );
+  const valueAndPrecisionSize = getRelativeValuesAndPrecisionByExchange(
+    bids[0][1],
+    "size",
+    instrumentName,
+    exchangeMarkets
+  );
+  pricePrecision = valueAndPrecisionPrice.relativePrecision;
+  sizePrecision = valueAndPrecisionSize.relativePrecision;
+  let long = [],
+    short = [];
+  for (let bid of bids) {
+    long.push({
+      price: bid[0] * pricePrecision,
+      size: bid[1] * sizePrecision,
+      pricePrecision,
+      sizePrecision
+    });
+  }
+  for (let ask of asks) {
+    short.push({
+      price: ask[0] * pricePrecision,
+      size: ask[1] * sizePrecision,
+      pricePrecision,
+      sizePrecision
+    });
+  }
+
+  return { long, short };
+};
+
+exports.getfundingParser = (funding, premiumIndex) => {
+  const { nextFundingTime } = premiumIndex;
+  const { fundingRate } = funding;
+  const fundingRatePrecision = variables.funding.precision;
+
+  return {
+    nextFunding: nextFundingTime / 1000,
+    fundingRate: fundingRate * fundingRatePrecision,
+    fundingRatePrecision
+  };
+};

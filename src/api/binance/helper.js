@@ -9,6 +9,12 @@ exports.getMarkPrice = async (conn, instrumentName) => {
   });
   return premiumIndex.markPrice;
 };
+exports.getPremiumIndex = async (conn, instrumentName) => {
+  const premiumIndex = await conn.fapiPublicGetPremiumIndex({
+    symbol: removeSpecialCharacters(instrumentName)
+  });
+  return premiumIndex;
+};
 
 exports.setOrderParams = (order, exchangeMarkets) => {
   let { customId, type, stopPrice, instrumentName, price } = order;
