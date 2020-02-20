@@ -1,4 +1,5 @@
-const { createOrderParser, getOrderParser } = require("../parser");
+const { createOrderParser, getOrderParser } = require('../parser');
+const { getInstrumentId } = require('../../../services/general');
 
 class OrderService {
   constructor(dependencies) {
@@ -31,13 +32,39 @@ class OrderService {
     const parsedOrder = getOrderParser(order, this.exchangeMarkets);
     return parsedOrder;
   }
-  async cancelOrder(orderId, instrumentName) {
+  async getAllOrders(instrumentName) {
+    const orders = await this.exchange.fetchOrders(instrumentName);
+    const orderList = [];
+    for (let order of orders) {
+      const parsedOrder = getOrderParser(order, this.exchangeMarkets);
+      orderList.push(parsedOrder);
+    }
+    return orderList;
+  }
+  async getAllOpenOrders(instrumentName) {
+    const orders = await this.exchange.fetchOpenOrders(instrumentName);
+    const orderList = [];
+    for (let order of orders) {
+      const parsedOrder = getOrderParser(order, this.exchangeMarkets);
+      orderList.push(parsedOrder);
+    }
+    return orderList;
+  }
+  async cancelOrder(instrumentName) {
     const canceledOrder = await this.exchange.cancelOrder(
       orderId,
       instrumentName
     );
     //const parsedOrder = getOrderParser(order, this.exchangeMarkets);
     return getOrderParser(canceledOrder, this.exchangeMarkets);
+  }
+  async cancelAllOrders(instrumentName) {
+    const canceledOrders = await this.exchange.fapiPrivateDeleteAllOpenOrders({
+      symbol: getInstrumentId(instrumentName, this.exchangeMarkets)
+    });
+
+    //const parsedOrder = getOrderParser(order, this.exchangeMarkets);
+    return canceledOrders;
   }
   async updateOrder(orderInfo) {
     const { orderId, instrumentName } = orderInfo;

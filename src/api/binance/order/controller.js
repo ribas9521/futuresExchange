@@ -1,5 +1,5 @@
-const { errorHandler } = require("../../../services/errorHandler");
-const OrderService = require("./service");
+const { errorHandler } = require('../../../services/errorHandler');
+const OrderService = require('./service');
 
 exports.createOrder = async (req, res) => {
   try {
@@ -26,6 +26,38 @@ exports.getOrder = async (req, res) => {
       exchangeMarkets
     });
     const order = await orderService.getOrder(orderId, instrumentName);
+    return res.status(200).json(order);
+  } catch (e) {
+    const error = errorHandler(e);
+    return res.status(500).json(error);
+  }
+};
+exports.getAllOrders = async (req, res) => {
+  try {
+    const { exchangeMarkets, exchange, query } = req;
+    const { instrumentName } = query;
+
+    const orderService = new OrderService({
+      exchange,
+      exchangeMarkets
+    });
+    const order = await orderService.getAllOrders(instrumentName);
+    return res.status(200).json(order);
+  } catch (e) {
+    const error = errorHandler(e);
+    return res.status(500).json(error);
+  }
+};
+exports.getAllOpenOrders = async (req, res) => {
+  try {
+    const { exchangeMarkets, exchange, query } = req;
+    const { instrumentName } = query;
+
+    const orderService = new OrderService({
+      exchange,
+      exchangeMarkets
+    });
+    const order = await orderService.getAllOpenOrders(instrumentName);
     return res.status(200).json(order);
   } catch (e) {
     const error = errorHandler(e);
@@ -62,6 +94,23 @@ exports.updateOrder = async (req, res) => {
     });
     const order = await orderService.updateOrder(body);
     return res.status(200).json(order);
+  } catch (e) {
+    const error = errorHandler(e);
+    return res.status(500).json(error);
+  }
+};
+
+exports.cancelAllOrders = async (req, res) => {
+  try {
+    const { exchangeMarkets, exchange, query } = req;
+    const { orderId, instrumentName } = query;
+
+    const orderService = new OrderService({
+      exchange,
+      exchangeMarkets
+    });
+    const canceledOrder = await orderService.cancelAllOrders(instrumentName);
+    return res.status(200).json(canceledOrder);
   } catch (e) {
     const error = errorHandler(e);
     return res.status(500).json(error);

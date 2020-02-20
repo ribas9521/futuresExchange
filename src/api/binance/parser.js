@@ -11,29 +11,29 @@ const {
   getAbsoluteValueByExchange,
   getInstrumentNameFromId,
   round
-} = require("../../services/general");
+} = require('../../services/general');
 
-const { setOrderParams, shouldUseParams } = require("./helper");
-const { getInstrumentId } = require("../../services/general");
+const { setOrderParams, shouldUseParams } = require('./helper');
+const { getInstrumentId } = require('../../services/general');
 
-const variables = require("./variables");
+const variables = require('./variables');
 
 exports.instrumentInfoParser = instrumentTicker => {
   const { info } = instrumentTicker;
   const { filters } = info;
   const priceInfoTicker = filters.filter(
-    f => f.filterType === "PRICE_FILTER"
+    f => f.filterType === 'PRICE_FILTER'
   )[0];
-  if (!priceInfoTicker) throw new Error("Price filter not found");
+  if (!priceInfoTicker) throw new Error('Price filter not found');
 
-  const amountInfoTicker = filters.filter(f => f.filterType === "LOT_SIZE")[0];
-  if (!amountInfoTicker) throw new Error("Amount filter not found");
+  const amountInfoTicker = filters.filter(f => f.filterType === 'LOT_SIZE')[0];
+  if (!amountInfoTicker) throw new Error('Amount filter not found');
 
   const amountMarketInfoTicker = filters.filter(
-    f => f.filterType === "MARKET_LOT_SIZE"
+    f => f.filterType === 'MARKET_LOT_SIZE'
   )[0];
   if (!amountMarketInfoTicker)
-    throw new Error("Amount market filter not found");
+    throw new Error('Amount market filter not found');
 
   return {
     priceTickSize:
@@ -88,14 +88,14 @@ exports.createOrderParser = (order, exchangeMarkets) => {
     side: filterSideTo(side),
     amount: getAbsoluteValueByExchange(
       size,
-      "size",
+      'size',
       instrumentName,
       exchangeMarkets
     ),
     ...(price && {
       price: getAbsoluteValueByExchange(
         price,
-        "price",
+        'price',
         instrumentName,
         exchangeMarkets
       )
@@ -109,7 +109,7 @@ exports.createOrderParser = (order, exchangeMarkets) => {
   return newOrder;
 };
 
-exports.getOrderParser = async (order, exchangeMarkets) => {
+exports.getOrderParser = (order, exchangeMarkets) => {
   let {
     id,
     info,
@@ -124,26 +124,26 @@ exports.getOrderParser = async (order, exchangeMarkets) => {
   const { clientOrderId, type, stopPrice } = info;
   const sizeAndPrecision = getRelativeValuesAndPrecisionByExchange(
     amount,
-    "size",
+    'size',
     symbol,
     exchangeMarkets
   );
   priceAndPrecision = getRelativeValuesAndPrecisionByExchange(
     price,
-    "price",
+    'price',
     symbol,
     exchangeMarkets
   );
   const relativeRemaining = getRelativeValuesAndPrecisionByExchange(
     remaining,
-    "size",
+    'size',
     symbol,
     exchangeMarkets
   );
   if (stopPrice)
     relativeStopPrice = getRelativeValuesAndPrecisionByExchange(
       stopPrice,
-      "price",
+      'price',
       symbol,
       exchangeMarkets
     );
@@ -160,8 +160,8 @@ exports.getOrderParser = async (order, exchangeMarkets) => {
     status,
     type,
     timeStamp,
-    description: "",
-    open: status === "closed" ? false : true,
+    description: '',
+    open: status === 'closed' ? false : true,
     ...(stopPrice && {
       stopPrice: relativeStopPrice.relativeValue
     })
@@ -183,7 +183,7 @@ exports.getPositionParser = (positions, instrumentName, exchangeMarkets) => {
   } = position;
   const sizeAndPrecision = getRelativeValuesAndPrecisionByExchange(
     positionAmt,
-    "size",
+    'size',
     instrumentName,
     exchangeMarkets
   );
@@ -193,7 +193,7 @@ exports.getPositionParser = (positions, instrumentName, exchangeMarkets) => {
   const balanceUsed = (positionAmt / leverage) * entryPrice;
   const balanceUsedAndPrecision = getRelativeValuesAndPrecisionByExchange(
     balanceUsed,
-    "price",
+    'price',
     instrumentName,
     exchangeMarkets
   );
@@ -203,7 +203,7 @@ exports.getPositionParser = (positions, instrumentName, exchangeMarkets) => {
   const pnlPrecision = variables.position.pnlPrecision;
   const relativeLeverage = leverage * variables.leverage.precision;
   const leveragePrecision = variables.leverage.precision;
-  const leverageIsolated = marginType === "isolated" ? true : false;
+  const leverageIsolated = marginType === 'isolated' ? true : false;
   return {
     size,
     sizePrecision,
@@ -260,13 +260,13 @@ exports.getOrderBookParser = (orderbook, exchangeMarkets, instrumentName) => {
   const { bids, asks } = orderbook;
   const valueAndPrecisionPrice = getRelativeValuesAndPrecisionByExchange(
     bids[0][0],
-    "price",
+    'price',
     instrumentName,
     exchangeMarkets
   );
   const valueAndPrecisionSize = getRelativeValuesAndPrecisionByExchange(
     bids[0][1],
-    "size",
+    'size',
     instrumentName,
     exchangeMarkets
   );
@@ -303,5 +303,13 @@ exports.getfundingParser = (funding, premiumIndex) => {
     nextFunding: nextFundingTime / 1000,
     fundingRate: fundingRate * fundingRatePrecision,
     fundingRatePrecision
+  };
+};
+
+exports.getStopParser = order => {
+  const { stopPrice, pricePrecision } = order;
+  return {
+    stopPrice,
+    stopPrecision: pricePrecision
   };
 };
