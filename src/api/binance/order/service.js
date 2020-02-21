@@ -72,6 +72,13 @@ class OrderService {
     const createdOrder = await this.createOrder(orderInfo);
     return createdOrder;
   }
+
+  cancelAllOrdersSucced(e) {
+    if (e.message.includes('code') && e.message.includes('200')) {
+      return true;
+    }
+    return false;
+  }
 }
 
 module.exports = OrderService;

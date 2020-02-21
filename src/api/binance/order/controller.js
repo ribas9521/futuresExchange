@@ -101,18 +101,19 @@ exports.updateOrder = async (req, res) => {
 };
 
 exports.cancelAllOrders = async (req, res) => {
-  try {
-    const { exchangeMarkets, exchange, query } = req;
-    const { orderId, instrumentName } = query;
+  const { exchangeMarkets, exchange, query } = req;
+  const { instrumentName } = query;
 
-    const orderService = new OrderService({
-      exchange,
-      exchangeMarkets
-    });
+  const orderService = new OrderService({
+    exchange,
+    exchangeMarkets
+  });
+  try {
     const canceledOrder = await orderService.cancelAllOrders(instrumentName);
     return res.status(200).json(canceledOrder);
   } catch (e) {
     const error = errorHandler(e);
+    if (orderService.cancelAllOrdersSucced(e)) return res.status(200).json({});
     return res.status(500).json(error);
   }
 };
