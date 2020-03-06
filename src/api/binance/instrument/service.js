@@ -2,12 +2,12 @@ const {
   instrumentInfoParser,
   priceInfoParser,
   feeInfoParser
-} = require("../parser");
-const { fees } = require("../variables");
+} = require('../parser');
+const { fees } = require('../variables');
 
-const { getMarkPrice } = require("../helper");
+const { getMarkPrice } = require('../helper');
 
-const { getTicker, fetchBidsAsks } = require("../../../services/general");
+const { getTicker, fetchBidsAsks } = require('../../../services/general');
 
 class InstrumentService {
   constructor(dependencies) {
@@ -36,7 +36,13 @@ class InstrumentService {
     const ticker = await getTicker(this.exchange, instrument.symbol);
     const bidsAsks = await fetchBidsAsks(this.exchange, instrument.symbol);
     const markPrice = await getMarkPrice(this.exchange, instrument.symbol);
-    const priceInfo = priceInfoParser(instrument, ticker, bidsAsks, markPrice);
+    const priceInfo = priceInfoParser(
+      instrument,
+      ticker,
+      bidsAsks,
+      markPrice,
+      this.exchangeMarkets
+    );
     return priceInfo;
   }
   getFeeInfo() {

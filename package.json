@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha --timeout 150000 -R spec --recursive --exit",
+    "start": "nodemon --inspect=0.0.0.0 ./src/app.js"
   },
   "author": "",
   "license": "ISC",
@@ -19,6 +20,10 @@
     "serverless-http": "^2.3.0"
   },
   "devDependencies": {
-    "serverless-offline": "^5.12.1"
+    "serverless-offline": "^5.12.1",
+    "chai": "^4.2.0",
+    "chai-http": "^4.3.0",
+    "mocha": "^7.1.0",
+    "nyc": "^15.0.0"
   }
 }

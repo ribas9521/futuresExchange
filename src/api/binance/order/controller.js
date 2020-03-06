@@ -75,8 +75,8 @@ exports.cancelOrder = async (req, res) => {
       exchangeMarkets
     });
     const canceledOrder = await orderService.cancelOrder(
-      orderId,
-      instrumentName
+      instrumentName,
+      orderId
     );
     return res.status(200).json(canceledOrder);
   } catch (e) {

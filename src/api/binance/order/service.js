@@ -50,7 +50,7 @@ class OrderService {
     }
     return orderList;
   }
-  async cancelOrder(instrumentName) {
+  async cancelOrder(instrumentName, orderId) {
     const canceledOrder = await this.exchange.cancelOrder(
       orderId,
       instrumentName

@@ -57,14 +57,45 @@ exports.instrumentInfoParser = instrumentTicker => {
   };
 };
 
-exports.priceInfoParser = (instrument, ticker, bidsAsks, markPrice) => {
+exports.priceInfoParser = (
+  instrument,
+  ticker,
+  bidsAsks,
+  markPrice,
+  exchangeMarkets
+) => {
+  const currentPrice = getRelativeValuesAndPrecisionByExchange(
+    ticker.last,
+    'price',
+    instrument.symbol,
+    exchangeMarkets
+  );
+  const bidPrice = getRelativeValuesAndPrecisionByExchange(
+    bidsAsks.bid,
+    'price',
+    instrument.symbol,
+    exchangeMarkets
+  );
+  const askPrice = getRelativeValuesAndPrecisionByExchange(
+    bidsAsks.ask,
+    'price',
+    instrument.symbol,
+    exchangeMarkets
+  );
+  const currentMarkPrice = getRelativeValuesAndPrecisionByExchange(
+    bidsAsks.ask,
+    null,
+    instrument.symbol,
+    exchangeMarkets,
+    getPrecision(8)
+  );
   const priceInfo = {
-    currentPrice: parseToInt(ticker.last),
-    currentMarkPrice: parseToInt(markPrice),
-    pricePrecision: getPrecision(instrument.precision.price),
-    markPricePrecision: getPrecision(8),
-    bidPrice: parseToInt(bidsAsks.bid),
-    askPrice: parseToInt(bidsAsks.ask)
+    currentPrice: currentPrice.relativeValue,
+    currentMarkPrice: currentMarkPrice.relativeValue,
+    pricePrecision: currentPrice.relativePrecision,
+    markPricePrecision: currentMarkPrice.relativePrecision,
+    bidPrice: bidPrice.relativeValue,
+    askPrice: askPrice.relativeValue
   };
   return priceInfo;
 };
