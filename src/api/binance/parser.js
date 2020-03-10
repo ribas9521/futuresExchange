@@ -40,17 +40,14 @@ exports.instrumentInfoParser = instrumentTicker => {
       priceInfoTicker.tickSize *
       Math.pow(10, countDecimals(priceInfoTicker.tickSize)),
     priceTickPrecision: Math.pow(10, countDecimals(priceInfoTicker.tickSize)),
-    amountLimitTickSize:
+    limitTickSize:
       amountInfoTicker.stepSize *
       Math.pow(10, countDecimals(amountInfoTicker.stepSize)),
-    amountLimitTickPrecision: Math.pow(
-      10,
-      countDecimals(amountInfoTicker.stepSize)
-    ),
-    amountMarketTickSize:
+    limitTickPrecision: Math.pow(10, countDecimals(amountInfoTicker.stepSize)),
+    marketTickSize:
       amountMarketInfoTicker.stepSize *
       Math.pow(10, countDecimals(amountMarketInfoTicker.stepSize)),
-    amountMarketTickPrecision: Math.pow(
+    marketTickPrecision: Math.pow(
       10,
       countDecimals(amountMarketInfoTicker.stepSize)
     )
