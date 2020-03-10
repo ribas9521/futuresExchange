@@ -20,10 +20,11 @@
     "serverless-http": "^2.3.0"
   },
   "devDependencies": {
-    "serverless-offline": "^5.12.1",
     "chai": "^4.2.0",
     "chai-http": "^4.3.0",
     "mocha": "^7.1.0",
-    "nyc": "^15.0.0"
+    "mocha-each": "^2.0.1",
+    "nyc": "^15.0.0",
+    "serverless-offline": "^5.12.1"
   }
 }

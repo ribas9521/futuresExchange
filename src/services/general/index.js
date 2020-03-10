@@ -106,7 +106,7 @@ exports.filterSidefrom = side => {
 };
 exports.filterType = type => {
   type = type.toUpperCase();
-  if (type === 'LIMIT' || type === 'MARKET' || type === 'TAKE_PROFIT')
+  // if (type === 'LIMIT' || type === 'MARKET' || type === 'TAKE_PROFIT')
     return type;
   throw {
     type: 'type error ',

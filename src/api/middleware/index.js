@@ -1,22 +1,24 @@
-const ccxt = require("ccxt");
-const { getApiPair, exchangeExists } = require("../../services/general");
+const ccxt = require('ccxt');
+const { getApiPair, exchangeExists } = require('../../services/general');
 
-const { errorHandler } = require("../../services/errorHandler");
+const { errorHandler } = require('../../services/errorHandler');
 let exchangeMarkets = [];
 
 exports.authenticateAndConnect = async (req, res, next) => {
   try {
-    const { exchangename, accountid } = req.headers;
+    const { accountid } = req.headers;
+    const { path } = req;
+    const exchangename = path.split('/')[1];
     if (!exchangeExists(exchangename))
       throw {
-        message: "Exchange not found",
-        type: "Invalid Exchange"
+        message: 'Exchange not found',
+        type: 'Invalid Exchange'
       };
     let exchangeOptions;
     if (!accountid)
       throw {
-        message: "Invalid AccountId",
-        type: "Invalid AccountId"
+        message: 'Invalid AccountId',
+        type: 'Invalid AccountId'
       };
     const apiPair = await getApiPair(exchangename, accountid);
     if (apiPair) {
@@ -28,12 +30,12 @@ exports.authenticateAndConnect = async (req, res, next) => {
         enableRateLimit: true,
         urls: {
           api: {
-            fapiPublic: "https://testnet.binancefuture.com/fapi/v1", // ←------  fapi prefix here
-            fapiPrivate: "https://testnet.binancefuture.com/fapi/v1" // ←------  fapi prefix here
+            fapiPublic: 'https://testnet.binancefuture.com/fapi/v1', // ←------  fapi prefix here
+            fapiPrivate: 'https://testnet.binancefuture.com/fapi/v1' // ←------  fapi prefix here
           }
         },
         options: {
-          defaultType: "future",
+          defaultType: 'future',
           warnOnFetchOpenOrdersWithoutSymbol: false
         }
       };
@@ -43,12 +45,12 @@ exports.authenticateAndConnect = async (req, res, next) => {
         enableRateLimit: true,
         urls: {
           api: {
-            fapiPublic: "https://testnet.binancefuture.com/fapi/v1", // ←------  fapi prefix here
-            fapiPrivate: "https://testnet.binancefuture.com/fapi/v1" // ←------  fapi prefix here
+            fapiPublic: 'https://testnet.binancefuture.com/fapi/v1', // ←------  fapi prefix here
+            fapiPrivate: 'https://testnet.binancefuture.com/fapi/v1' // ←------  fapi prefix here
           }
         },
         options: {
-          defaultType: "future",
+          defaultType: 'future',
           warnOnFetchOpenOrdersWithoutSymbol: false
         }
       };
@@ -83,7 +85,7 @@ exports.isInstrumentValid = async (req, res, next) => {
   try {
     let instrumentName = req.query.instrumentName || req.body.instrumentName;
     if (!instrumentName || !exchangeMarkets[instrumentName.toUpperCase()]) {
-      throw { message: "Instrument not found", type: "Invalid Instrument" };
+      throw { message: 'Instrument not found', type: 'Invalid Instrument' };
     } else {
       req.instrument = exchangeMarkets[instrumentName.toUpperCase()];
       req.query.instrumentName = instrumentName.toUpperCase();

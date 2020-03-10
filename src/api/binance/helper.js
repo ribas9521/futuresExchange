@@ -2,7 +2,7 @@ const {
   removeSpecialCharacters,
   getAbsoluteValueByExchange,
   filterType
-} = require("../../services/general");
+} = require('../../services/general');
 exports.getMarkPrice = async (conn, instrumentName) => {
   const premiumIndex = await conn.fapiPublicGetPremiumIndex({
     symbol: removeSpecialCharacters(instrumentName)
@@ -26,17 +26,18 @@ exports.setOrderParams = (order, exchangeMarkets) => {
     ...(price && {
       price: getAbsoluteValueByExchange(
         price,
-        "price",
+        'price',
         instrumentName,
         exchangeMarkets
       )
     }),
-    ...(type === "TAKE_PROFIT" &&
+    ...(type !== 'LIMIT' &&
+      type !== 'MARKET' &&
       stopPrice && {
         type,
         stopPrice: getAbsoluteValueByExchange(
           stopPrice,
-          "price",
+          'price',
           instrumentName,
           exchangeMarkets
         )
@@ -46,5 +47,5 @@ exports.setOrderParams = (order, exchangeMarkets) => {
 
 exports.shouldUseParams = order => {
   const { type, customId } = order;
-  return type === "STOP_LIMIT" ? true : false || customId ? true : false;
+  return type === 'STOP_LIMIT' ? true : false || customId ? true : false;
 };
