@@ -68,7 +68,7 @@ class OrderService {
   }
   async updateOrder(orderInfo) {
     const { orderId, instrumentName } = orderInfo;
-    await this.cancelOrder(orderId, instrumentName);
+    await this.cancelOrder(instrumentName, orderId);
     const createdOrder = await this.createOrder(orderInfo);
     return createdOrder;
   }

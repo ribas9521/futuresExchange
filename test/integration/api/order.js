@@ -43,6 +43,38 @@ const getInstrumentInfo = async ({ instrumentName }) =>
     .set('accountId', 'test')
     .query({ instrumentName });
 
+const updateOrder = async ({
+  instrumentName,
+  orderId,
+  customId,
+  size,
+  side,
+  type,
+  price,
+  stopPrice
+}) =>
+  chai
+    .request(server)
+    .put('/api/binance/order')
+    .set('accountId', 'test')
+    .query({ orderId })
+    .send({
+      orderId,
+      instrumentName,
+      ...(price && {
+        price
+      }),
+      ...(customId && {
+        customId
+      }),
+      ...(stopPrice && {
+        stopPrice
+      }),
+      size,
+      side,
+      type
+    });
+
 const createOrder = ({
   instrumentName,
   customId,
@@ -70,8 +102,7 @@ const createOrder = ({
       }),
       size,
       side,
-      type,
-      price
+      type
     });
 
 describe('api', () => {
@@ -554,6 +585,86 @@ describe('api', () => {
           expect(get).to.have.property('body');
           expect(get.body).to.have.property('type');
           expect(get.body).to.have.property('message');
+        });
+      });
+      describe('/put', () => {
+        it('should post an order and update all params', async () => {
+          const post = await createOrder({
+            instrumentName: market,
+            size: 1000,
+            price: Math.round(priceInfo.body.currentPrice * 1.1),
+            type: 'LIMIT',
+            side: 'SHORT'
+          });
+          expect(post).to.have.status(200);
+          expect(post).to.have.property('body');
+          expect(post.body.size).to.be.equal(1000);
+          expect(post.body.side).to.be.equal('SHORT');
+          expect(post.body.type).to.be.equal('LIMIT');
+          expect(post.body.instrumentName).to.be.equal(market);
+          expect(post.body.price).to.be.equal(
+            Math.round(priceInfo.body.currentPrice * 1.1)
+          );
+          let orderId = post.body.id;
+          const put = await updateOrder({
+            instrumentName: market,
+            orderId,
+            size: 2000,
+            price: Math.round(priceInfo.body.currentPrice * 1.1),
+            type: 'LIMIT',
+            side: 'SHORT'
+          });
+          expect(put).to.have.status(200);
+          expect(put).to.have.property('body');
+          expect(put.body.size).to.be.equal(2000);
+          expect(put.body.side).to.be.equal('SHORT');
+          expect(put.body.type).to.be.equal('LIMIT');
+          expect(put.body.instrumentName).to.be.equal(market);
+          expect(put.body.price).to.be.equal(
+            Math.round(priceInfo.body.currentPrice * 1.1)
+          );
+          orderId = put.body.id;
+          const deletion = await cancelOrder({
+            instrumentName: market,
+            orderId
+          });
+          expect(deletion).to.have.status(200);
+        });
+        it.only('should fail to update an order with wrongs params', async () => {
+          const post = await createOrder({
+            instrumentName: market,
+            size: 1000,
+            price: Math.round(priceInfo.body.currentPrice * 1.1),
+            type: 'LIMIT',
+            side: 'SHORT'
+          });
+          expect(post).to.have.status(200);
+          expect(post).to.have.property('body');
+          expect(post.body.size).to.be.equal(1000);
+          expect(post.body.side).to.be.equal('SHORT');
+          expect(post.body.type).to.be.equal('LIMIT');
+          expect(post.body.instrumentName).to.be.equal(market);
+          expect(post.body.price).to.be.equal(
+            Math.round(priceInfo.body.currentPrice * 1.1)
+          );
+          let orderId = post.body.id;
+          const put = await updateOrder({
+            instrumentName: 'AAA/AAA',
+            orderId,
+            size: 2000,
+            price: Math.round(priceInfo.body.currentPrice * 1.1),
+            type: 'LIMIT',
+            side: 'SHORT'
+          });
+          expect(put).to.have.status(500);
+          expect(put).to.have.property('body');
+          expect(put.body).to.have.property('type');
+          expect(put.body).to.have.property('message');
+          const deletion = await cancelOrder({
+            instrumentName: market,
+            orderId
+          });
+          expect(deletion).to.have.status(200);
         });
       });
     });
