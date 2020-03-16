@@ -21,6 +21,14 @@ const cancelOrder = ({ instrumentName, orderId }) =>
     .set('accountId', 'test')
     .query({ instrumentName, orderId });
 
+const cancelAllOrders = ({ instrumentName }) =>
+  chai
+    .request(server)
+    .post('/api/binance/order/cancel/all')
+    .set('Accept', 'application/json')
+    .set('accountId', 'test')
+    .query({ instrumentName });
+
 const getOrderById = ({ instrumentName, orderId }) =>
   chai
     .request(server)
@@ -33,6 +41,14 @@ const getAllOrders = ({ instrumentName }) =>
   chai
     .request(server)
     .get('/api/binance/order/all')
+    .set('Accept', 'application/json')
+    .set('accountId', 'test')
+    .query({ instrumentName });
+
+const getOpenOrders = ({ instrumentName }) =>
+  chai
+    .request(server)
+    .get('/api/binance/order/open')
     .set('Accept', 'application/json')
     .set('accountId', 'test')
     .query({ instrumentName });
@@ -675,7 +691,7 @@ describe('api', () => {
           expect(deletion).to.have.status(200);
         });
       });
-      describe.only('/get/all', () => {
+      describe('/get/all', () => {
         it(`should open an order get all orders and check if the last order is matches
         with the opened one `, async () => {
           const post = await createOrder({
@@ -696,26 +712,22 @@ describe('api', () => {
             Math.round(priceInfo.body.currentPrice * 0.85)
           );
           const orderId = post.body.id;
-
           const allOrders = await getAllOrders({ instrumentName: market });
           const lastOrder = allOrders.body[allOrders.body.length - 1];
-
-          expect(lastOrder).to.have.status(200);
-          expect(lastOrder).to.have.property('body');
-          expect(lastOrder.body.id).to.be.equal(orderId);
-          expect(lastOrder.body.size).to.be.equal(1000);
-          expect(lastOrder.body.sizePrecision).to.be.equal(
+          expect(lastOrder.id).to.be.equal(orderId);
+          expect(lastOrder.size).to.be.equal(1000);
+          expect(lastOrder.sizePrecision).to.be.equal(
             instrumentInfo.body.limitTickPrecision
           );
-          expect(lastOrder.body.leftSize).to.be.equal(1000);
-          expect(lastOrder.body.status).to.be.equal('open');
-          expect(lastOrder.body.side).to.be.equal('LONG');
-          expect(lastOrder.body.type).to.be.equal('TAKE_PROFIT_MARKET');
-          expect(lastOrder.body.instrumentName).to.be.equal(market);
-          expect(lastOrder.body.stopPrice).to.be.equal(
-            Math.round(priceInfo.body.currentPrice * 1.1)
+          expect(lastOrder.leftSize).to.be.equal(1000);
+          expect(lastOrder.status).to.be.equal('open');
+          expect(lastOrder.side).to.be.equal('LONG');
+          expect(lastOrder.type).to.be.equal('TAKE_PROFIT_MARKET');
+          expect(lastOrder.instrumentName).to.be.equal(market);
+          expect(lastOrder.stopPrice).to.be.equal(
+            Math.round(priceInfo.body.currentPrice * 0.85)
           );
-          expect(lastOrder.body.pricePrecision).to.be.equal(
+          expect(lastOrder.pricePrecision).to.be.equal(
             instrumentInfo.body.priceTickPrecision
           );
 
@@ -724,6 +736,79 @@ describe('api', () => {
             orderId
           });
           expect(deletion).to.have.status(200);
+        });
+      });
+      describe('/get/open', () => {
+        it(`should open two orders, get all open orders and verify the two orders matches`, async () => {
+          const post1 = await createOrder({
+            instrumentName: market,
+            size: 1000,
+            type: 'TAKE_PROFIT_MARKET',
+            side: 'LONG',
+            stopPrice: Math.round(priceInfo.body.currentPrice * 0.85)
+          });
+
+          expect(post1).to.have.status(200);
+
+          const post2 = await createOrder({
+            instrumentName: market,
+            size: 1000,
+            price: Math.round(priceInfo.body.currentPrice * 1.1),
+            type: 'LIMIT',
+            side: 'SHORT'
+          });
+
+          expect(post2).to.have.status(200);
+
+          const orderId1 = post1.body.id;
+          const orderId2 = post2.body.id;
+
+          const openOrders = await getOpenOrders({ instrumentName: market });
+          expect(openOrders.body).to.have.lengthOf(2);
+          const order1 = openOrders.body[0];
+          expect(order1.id).to.be.equal(orderId1);
+          expect(order1.size).to.be.equal(1000);
+          expect(order1.sizePrecision).to.be.equal(
+            instrumentInfo.body.limitTickPrecision
+          );
+          expect(order1.leftSize).to.be.equal(1000);
+          expect(order1.status).to.be.equal('open');
+          expect(order1.side).to.be.equal('LONG');
+          expect(order1.type).to.be.equal('TAKE_PROFIT_MARKET');
+          expect(order1.instrumentName).to.be.equal(market);
+          expect(order1.stopPrice).to.be.equal(
+            Math.round(priceInfo.body.currentPrice * 0.85)
+          );
+          expect(order1.pricePrecision).to.be.equal(
+            instrumentInfo.body.priceTickPrecision
+          );
+          const order2 = openOrders.body[1];
+          expect(order2.id).to.be.equal(orderId2);
+          expect(order2.size).to.be.equal(1000);
+          expect(order2.sizePrecision).to.be.equal(
+            instrumentInfo.body.limitTickPrecision
+          );
+          expect(order2.leftSize).to.be.equal(1000);
+          expect(order2.status).to.be.equal('open');
+          expect(order2.side).to.be.equal('SHORT');
+          expect(order2.type).to.be.equal('LIMIT');
+          expect(order2.instrumentName).to.be.equal(market);
+          expect(order2.price).to.be.equal(
+            Math.round(priceInfo.body.currentPrice * 1.1)
+          );
+          expect(order2.pricePrecision).to.be.equal(
+            instrumentInfo.body.priceTickPrecision
+          );
+
+          const deletion = await cancelAllOrders({
+            instrumentName: market
+          });
+          expect(deletion).to.have.status(200);
+        });
+        it(`should get open orders with no orders open and return an empty array`, async () => {
+          const openOrders = await getOpenOrders({ instrumentName: market });
+          expect(openOrders).to.have.status(200);
+          expect(openOrders.body).to.have.lengthOf(0);
         });
       });
     });

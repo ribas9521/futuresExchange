@@ -1,5 +1,5 @@
-const { setLeverageParser, getLeverageParser } = require("../parser");
-const PositionService = require("../position/service");
+const { setLeverageParser, getLeverageParser } = require('../parser');
+const PositionService = require('../position/service');
 class LeverageService {
   constructor(dependencies) {
     const { exchange, exchangeMarkets } = dependencies;
@@ -17,9 +17,9 @@ class LeverageService {
   }
 
   async setLeverage(leverageInfo) {
-    const { value, instrumentName } = leverageInfo;
+    const { leverage, instrumentName } = leverageInfo;
     const leverageSet = await this.exchange.fapiPrivatePostLeverage(
-      setLeverageParser(value, instrumentName, this.exchangeMarkets)
+      setLeverageParser(leverage, instrumentName, this.exchangeMarkets)
     );
     // const parsedPosition = getPositionParser(
     //   positions,

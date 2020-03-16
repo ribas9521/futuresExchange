@@ -264,8 +264,8 @@ exports.getLeverageParser = (leverageInfo, exchangeMarkets) => {
     variables.leverage.precision
   );
   return {
-    value: relativeValue,
-    valuePrecision: relativePrecision,
+    leverage: relativeValue,
+    leveragePrecision: relativePrecision,
     instrumentName: getInstrumentNameFromId(symbol, exchangeMarkets)
   };
 };
