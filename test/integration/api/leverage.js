@@ -55,7 +55,7 @@ describe('api', () => {
           expect(post.body).to.have.property('message');
         });
       });
-      describe.only('/get', () => {
+      describe('/get', () => {
         it('should set a leverage of 25x', async () => {
           const post = await setLeverage({
             instrumentName: market,
