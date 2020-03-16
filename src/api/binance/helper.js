@@ -47,5 +47,9 @@ exports.setOrderParams = (order, exchangeMarkets) => {
 
 exports.shouldUseParams = order => {
   const { type, customId } = order;
-  return type === 'STOP_LIMIT' ? true : false || customId ? true : false;
+  return type !== 'LIMIT' && type !== 'MARKET'
+    ? true
+    : false || customId
+    ? true
+    : false;
 };

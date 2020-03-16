@@ -29,6 +29,14 @@ const getOrderById = ({ instrumentName, orderId }) =>
     .set('accountId', 'test')
     .query({ instrumentName, orderId });
 
+const getAllOrders = ({ instrumentName }) =>
+  chai
+    .request(server)
+    .get('/api/binance/order/all')
+    .set('Accept', 'application/json')
+    .set('accountId', 'test')
+    .query({ instrumentName });
+
 const getAllInstruments = async () =>
   chai
     .request(server)
@@ -630,7 +638,7 @@ describe('api', () => {
           });
           expect(deletion).to.have.status(200);
         });
-        it.only('should fail to update an order with wrongs params', async () => {
+        it('should fail to update an order with wrongs params', async () => {
           const post = await createOrder({
             instrumentName: market,
             size: 1000,
@@ -660,6 +668,57 @@ describe('api', () => {
           expect(put).to.have.property('body');
           expect(put.body).to.have.property('type');
           expect(put.body).to.have.property('message');
+          const deletion = await cancelOrder({
+            instrumentName: market,
+            orderId
+          });
+          expect(deletion).to.have.status(200);
+        });
+      });
+      describe.only('/get/all', () => {
+        it(`should open an order get all orders and check if the last order is matches
+        with the opened one `, async () => {
+          const post = await createOrder({
+            instrumentName: market,
+            size: 1000,
+            type: 'TAKE_PROFIT_MARKET',
+            side: 'LONG',
+            stopPrice: Math.round(priceInfo.body.currentPrice * 0.85)
+          });
+          expect(post).to.have.status(200);
+          expect(post).to.have.property('body');
+          expect(post.body.size).to.be.equal(1000);
+          expect(post.body.side).to.be.equal('LONG');
+          expect(post.body.type).to.be.equal('TAKE_PROFIT_MARKET');
+          expect(post.body.instrumentName).to.be.equal(market);
+
+          expect(post.body.stopPrice).to.be.equal(
+            Math.round(priceInfo.body.currentPrice * 0.85)
+          );
+          const orderId = post.body.id;
+
+          const allOrders = await getAllOrders({ instrumentName: market });
+          const lastOrder = allOrders.body[allOrders.body.length - 1];
+
+          expect(lastOrder).to.have.status(200);
+          expect(lastOrder).to.have.property('body');
+          expect(lastOrder.body.id).to.be.equal(orderId);
+          expect(lastOrder.body.size).to.be.equal(1000);
+          expect(lastOrder.body.sizePrecision).to.be.equal(
+            instrumentInfo.body.limitTickPrecision
+          );
+          expect(lastOrder.body.leftSize).to.be.equal(1000);
+          expect(lastOrder.body.status).to.be.equal('open');
+          expect(lastOrder.body.side).to.be.equal('LONG');
+          expect(lastOrder.body.type).to.be.equal('TAKE_PROFIT_MARKET');
+          expect(lastOrder.body.instrumentName).to.be.equal(market);
+          expect(lastOrder.body.stopPrice).to.be.equal(
+            Math.round(priceInfo.body.currentPrice * 1.1)
+          );
+          expect(lastOrder.body.pricePrecision).to.be.equal(
+            instrumentInfo.body.priceTickPrecision
+          );
+
           const deletion = await cancelOrder({
             instrumentName: market,
             orderId
