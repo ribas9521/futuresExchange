@@ -62,7 +62,7 @@ describe('api', () => {
   describe('/binance', () => {
     describe('/position', () => {
       describe('/get', () => {
-        it.only(`should open a position, check if the balance used 
+        it(`should open a position, check if the balance used 
         matches with leverage and current price, than close the position`, async () => {
           const post = await createOrder({
             instrumentName: market,
