@@ -1,24 +1,14 @@
-org: ribas95
-service: express-app
+service: my-express-application
 
 provider:
   name: aws
-  runtime: nodejs12.x
+  runtime: nodejs6.10
   stage: dev
   region: us-east-1
-  memorySize: 128
 
 functions:
-app: futures-exchange
+  app:
+    handler: app.handler
     events:
-      - http:
-          path: /
-          method: ANY
-          cors: true
-      - http:
-          path: /{proxy+}
-          method: ANY
-          cors: true
-
-plugins:
-  - serverless-offline
+      - http: ANY /
+      - http: 'ANY {proxy+}'
